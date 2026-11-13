@@ -1,0 +1,178 @@
+<div class="progress" aria-hidden="true"></div>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="nebula" aria-hidden="true"></div>
+  <div class="hero-shade" aria-hidden="true"></div>
+  <app-starfield />
+  <div class="moon-wrap" aria-hidden="true">
+    <div class="moon-glow"></div>
+    <img class="moon" src="img/moon.webp" alt="" width="720" height="720" fetchpriority="high">
+    <div class="orbit"><span class="probe"></span></div>
+  </div>
+
+  <div class="hero-content">
+    <p class="eyebrow"><span class="dot-live"></span>Lunar south pole · miss-tolerant landing planner</p>
+    <h1 class="hero-title">
+      @for (w of titleWords; track w; let i = $index) { <span class="word" [style.animation-delay.ms]="120 + i * 110">{{ w }}&nbsp;</span> }
+      <span class="word grad" style="animation-delay: 450ms">light&nbsp;</span><span class="word grad" style="animation-delay: 560ms">lasts.</span>
+    </h1>
+    <p class="hero-lead">
+      SHOTSPOT checks when the Sun and Earth stay above the real terrain horizon at a landing site,
+      and how many of the spots your lander might actually hit still meet your mission's needs.
+    </p>
+    <div class="hero-cta">
+      <a routerLink="/planner" class="btn btn--primary btn--lg">Open the planner →</a>
+      <a href="#problem" class="btn btn--lg btn--glass">Why it matters</a>
+    </div>
+  </div>
+  <a href="#problem" class="scroll-cue" aria-label="Scroll to the problem"><span></span></a>
+</section>
+
+<!-- ═══ PROBLEM STATEMENT ═══ -->
+<section class="block" id="problem">
+  <p class="kicker" appReveal>The problem</p>
+  <h2 class="block-title" appReveal>At the lunar south pole, a few meters decide everything.</h2>
+  <p class="block-lead" appReveal>
+    The south pole is where the next landers want to go: it may hold water ice, and some high ground sees sunlight for long stretches.
+    But it is also the hardest place on the Moon to land well.
+  </p>
+
+  <div class="problem-grid">
+    <article class="problem-card" appReveal>
+      <svg class="illus" viewBox="0 0 300 150" role="img" aria-label="Animation: the Sun gliding just above the horizon and disappearing behind a ridge">
+        <defs><radialGradient id="sunG"><stop offset="0" stop-color="#fff4cc"/><stop offset=".5" stop-color="#ffc94a"/><stop offset="1" stop-color="#ffc94a" stop-opacity="0"/></radialGradient></defs>
+        <path d="M-10 92 Q150 62 310 92" fill="none" stroke="#ffc94a" stroke-opacity=".25" stroke-dasharray="3 5"/>
+        <circle r="16" fill="url(#sunG)" [attr.cx]="reduce ? 80 : 0" [attr.cy]="reduce ? 80 : 0">
+          @if (!reduce) { <animateMotion dur="9s" repeatCount="indefinite" path="M-10 92 Q150 62 310 92"/> }
+        </circle>
+        <path d="M0 150 L0 104 40 98 70 106 110 90 135 70 160 92 200 100 240 96 270 106 300 100 300 150Z" fill="#1c2230"/>
+        <path d="M0 104 40 98 70 106 110 90 135 70 160 92 200 100 240 96 270 106 300 100" fill="none" stroke="#6b7a95" stroke-width="1.2"/>
+      </svg>
+      <h3>The Sun barely rises</h3>
+      <p>Near the pole the Sun circles the sky only a few degrees above the horizon. A ridge kilometers away can hide it for days:
+        no sunlight means no power, and the lander freezes.</p>
+    </article>
+
+    <article class="problem-card" appReveal style="transition-delay: 100ms">
+      <svg class="illus" viewBox="0 0 300 150" role="img" aria-label="Animation: Earth sinking behind a ridge and the radio link cutting out">
+        <g class="signal">
+          @if (!reduce) { <animate attributeName="opacity" dur="7s" repeatCount="indefinite" values="1;1;0;0;1;1" keyTimes="0;.32;.4;.66;.74;1"/> }
+          <path d="M70 118 Q120 80 182 62" fill="none" stroke="#5aa9ff" stroke-width="1.5" stroke-dasharray="4 4"><animate attributeName="stroke-dashoffset" from="16" to="0" dur="1s" repeatCount="indefinite"/></path>
+        </g>
+        <circle cx="200" cy="58" r="13" fill="#3b7fd6" stroke="#9ed0ff" stroke-width="1">
+          @if (!reduce) { <animate attributeName="cy" dur="7s" repeatCount="indefinite" values="58;58;112;112;58;58" keyTimes="0;.25;.45;.6;.8;1"/> }
+        </circle>
+        <path d="M0 150 L0 112 30 108 60 116 90 112 130 100 170 92 190 84 215 80 240 94 270 100 300 96 300 150Z" fill="#1c2230"/>
+        <path d="M0 112 30 108 60 116 90 112 130 100 170 92 190 84 215 80 240 94 270 100 300 96" fill="none" stroke="#6b7a95" stroke-width="1.2"/>
+        <g transform="translate(62 104)"><rect x="0" y="6" width="16" height="9" rx="2" fill="#9babc2"/><line x1="8" y1="6" x2="8" y2="0" stroke="#9babc2"/><circle cx="8" cy="0" r="2" fill="#5aa9ff"/></g>
+      </svg>
+      <h3>Earth slips below the horizon</h3>
+      <p>Earth also sits low in the polar sky. When terrain hides it, there is no direct radio link with the ground stations,
+        so the team cannot talk to the lander.</p>
+    </article>
+
+    <article class="problem-card" appReveal style="transition-delay: 200ms">
+      <svg class="illus illus--square" viewBox="0 0 200 200" role="img" aria-label="Animation: possible touchdown points scattering around an aim point, some landing in a crater or shadow">
+        <ellipse cx="140" cy="128" rx="34" ry="26" fill="#120f14" stroke="#4a3340"/>
+        <path d="M22 22 H52 V92 H22 Z" fill="#0b0d14" opacity=".9"/>
+        <circle cx="100" cy="100" r="78" fill="none" stroke="#fff" stroke-opacity=".5" stroke-dasharray="5 4"/>
+        <line x1="100" y1="84" x2="100" y2="116" stroke="#ffc94a"/><line x1="84" y1="100" x2="116" y2="100" stroke="#ffc94a"/>
+        @for (d of dots; track $index) {
+          <circle class="hit" [attr.cx]="d.x" [attr.cy]="d.y" r="3.4" [class.ok]="d.ok" [style.animation-delay.s]="reduce ? 0 : d.delay"/>
+        }
+      </svg>
+      <h3>Landers miss their mark</h3>
+      <p>No lander touches down exactly on its aim point. In 2025 the Athena lander came down hundreds of meters from its target.
+        A perfect spot is useless if the spots around it are in shadow or on a slope.</p>
+    </article>
+  </div>
+
+  <blockquote class="question" appReveal>
+    <p>“If I aim <em>here</em> and the lander may drift up to <em>X&nbsp;meters</em>, what share of the spots I might hit still get
+      enough sunlight and Earth contact, and where should I aim instead?”</p>
+    <footer>SHOTSPOT answers this question with real NASA terrain and ephemeris data.</footer>
+  </blockquote>
+  <p class="caption" appReveal>The animations above are illustrations. Every number in the planner comes from the engine.</p>
+</section>
+
+<!-- ═══ KEY NUMBERS ═══ -->
+@if (facts(); as f) {
+  <section class="facts" aria-label="Key numbers">
+    @for (x of f; track x.label; let i = $index) {
+      <div class="fact" appReveal [style.transition-delay.ms]="i * 80"><b [appCountUp]="x.value"></b><span>{{ x.label }}</span></div>
+    }
+  </section>
+}
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<section class="block" id="how">
+  <p class="kicker" appReveal>The solution</p>
+  <h2 class="block-title" appReveal>How it works</h2>
+  <p class="block-lead" appReveal>One planner page, four steps. Your site, dates and mission profile carry through every step.</p>
+  <div class="step-grid">
+    @for (st of steps; track st.n; let i = $index) {
+      <a class="step-card" routerLink="/planner" [fragment]="st.frag" appReveal [style.transition-delay.ms]="i * 90">
+        <span class="step-n">{{ st.n }}</span>
+        <h3>{{ st.title }}</h3>
+        <p>{{ st.text }}</p>
+        <span class="step-go">Open →</span>
+      </a>
+    }
+  </div>
+</section>
+
+<!-- ═══ SITES ═══ -->
+<section class="block">
+  <p class="kicker" appReveal>Where</p>
+  <h2 class="block-title" appReveal>The sites</h2>
+  <p class="block-lead" appReveal>Three high-ground candidates near the lunar south pole, mapped by NASA's LOLA laser altimeter at 5 m per pixel.</p>
+  @if (s.ready()) {
+    <div class="site-grid">
+      @for (d of s.sites(); track d.entry.id; let i = $index) {
+        <article class="site-card" appReveal [style.transition-delay.ms]="i * 90">
+          <div class="site-thumb"><img [src]="'data/' + d.entry.dir.replace('data/', '') + 'hillshade.png'" [alt]="'Terrain shading of ' + d.entry.name" loading="lazy" width="601" height="601"></div>
+          <div class="site-body">
+            <h3>{{ d.entry.name }}</h3>
+            <p>{{ d.entry.description }}</p>
+            <p class="caption">{{ d.entry.source }}</p>
+            <button class="btn" (click)="planAt(d.entry.id)">Plan here →</button>
+          </div>
+        </article>
+      }
+    </div>
+  } @else if (s.error()) {
+    <p class="hint bad">Site data could not be loaded ({{ s.error() }}). The planner needs it; run <code>npm start</code> in frontend/.</p>
+  } @else {
+    <p class="hint"><span class="spinner spinner--sm" aria-hidden="true"></span> Loading site data…</p>
+  }
+</section>
+
+<!-- ═══ LIMITS ═══ -->
+<section class="block block--honest">
+  <p class="kicker" appReveal>Honesty</p>
+  <h2 class="block-title" appReveal>Honest about its limits</h2>
+  <ul class="honest">
+    <li appReveal><b>Solar visibility, not power.</b> A body counts as visible when its center is above the terrain horizon.</li>
+    <li appReveal style="transition-delay: 80ms"><b>Geometric Earth visibility, not link quality.</b> No antennas or relays are modeled.</li>
+    <li appReveal style="transition-delay: 160ms"><b>Drift is your input.</b> A circular, uniform disk around the aim point, not a prediction.</li>
+    <li appReveal style="transition-delay: 240ms"><b>Small hazards are invisible.</b> Rocks and craters under ~10 m do not show at 5 m/px.</li>
+  </ul>
+  <a routerLink="/about" class="btn" appReveal>All assumptions, sources and validation →</a>
+</section>
+
+<!-- ═══ FINAL CTA ═══ -->
+<section class="final">
+  <div class="final-bg" aria-hidden="true"></div>
+  <div class="final-inner" appReveal>
+    <h2>Ready for touchdown?</h2>
+    <p>Pick a site, set your mission, and see where the light lasts.</p>
+    <a routerLink="/planner" class="btn btn--primary btn--lg">Open the planner →</a>
+  </div>
+</section>
+
+<footer class="footer">
+  Data: NASA GSFC PGDA Product 78 (LOLA), LRO LOLA GDR, NAIF SPICE (DE421), checked against NASA JPL Horizons.
+  Moon and nebula photos: Mohamed Shaaban Astrophotography.
+  SHOTSPOT is a research prototype, not an official mission tool.
+</footer>

@@ -1,0 +1,39 @@
+# ── Large / downloadable data (see DATA_LINKS.md and README) ──
+data/raw/
+data/spice/
+data/nac/
+data/labels/
+
+# ── Python ──
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# ── Node / Angular (frontend/ has its own .gitignore too) ──
+node_modules/
+frontend/dist/
+frontend/.angular/
+
+# ── Secrets: never commit keys or signed links ──
+.env
+.env.*
+*.pem
+credentials*.csv
+*accessKeys*.csv
+
+# ── OS / editors ──
+.DS_Store
+Thumbs.db
+.idea/
+
+# ── Local Claude Code settings ──
+.claude/settings.local.json
+
+# ── Local only: editor/tool settings, internal notes, generated labeler tiles ──
+.claude/
+.vscode/
+frontend/.vscode/
+SHARH_AR.md
+*.pdf
+web/labeler/tiles/
