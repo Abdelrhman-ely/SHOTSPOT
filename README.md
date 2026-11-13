@@ -25,8 +25,8 @@ cd pipeline && ../.venv/bin/python validate_horizons.py  # vs JPL Horizons (need
 ../.venv/bin/python build_site.py && cd ..               # all sites, ~11 s each (or: build_site.py Site23)
 ```
 
-Data needed (not in the repo, see `download_data.sh`): PGDA 78 layers for each site incl. `ldec`,
-`data/raw/lola_gdr/LDEM_75S_120M.{IMG,LBL}` from PDS, and the 5 SPICE kernels in `data/spice/`.
+Raw data (not in the repo, ~856 MB, all public NASA data): `bash download_data.sh --go` downloads the PGDA 78 layers,
+the 120 m LOLA GDR polar DEM and the 5 SPICE kernels into `data/`. See `DATA_LINKS.md`. Only needed to rerun the pipeline.
 
 ## Frontend (Angular)
 

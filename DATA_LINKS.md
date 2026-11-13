@@ -1,17 +1,27 @@
 # SHOTSPOT — Lunar South Pole Data (LOLA 5 m/px, PGDA product 78)
 
-Source: NASA GSFC PGDA product 78 — https://pgda.gsfc.nasa.gov/products/78
-The raw data is not in the repository (it is ~0.9 GB). Download it from NASA with `download_data.sh`.
+The raw data is not in the repository (~0.86 GB, and one file is over GitHub's 100 MB limit).
+Everything is public NASA data; one command downloads all of it.
+
+You only need it to rerun the pipeline (`build_site.py`). The website works without it,
+because the processed data is already in `web/data/`.
 
 ## Download
 
 ```bash
-bash download_data.sh                                              # dry run: lists files and sizes
-bash download_data.sh --files "surf slp slperr toterr ldec" --go   # downloads into data/raw/pgda78/
+bash download_data.sh        # dry run: lists every file and its size, downloads nothing
+bash download_data.sh --go   # downloads everything build_site.py needs (~856 MB, 22 files)
 ```
 
-`build_site.py` also needs the far-field DEM `data/raw/lola_gdr/LDEM_75S_120M.{IMG,LBL}` (PDS LOLA GDR)
-and the SPICE kernels in `data/spice/` (see README).
+| What | Saved to | Source |
+|---|---|---|
+| PGDA 78 LOLA 5 m/px DEMs, 3 sites × 5 layers | `data/raw/pgda78/<Site>/` | [NASA GSFC PGDA product 78](https://pgda.gsfc.nasa.gov/products/78) |
+| LOLA GDR polar DEM 120 m/px (`LDEM_75S_120M.IMG/.LBL`), far-field terrain | `data/raw/lola_gdr/` | [NASA PDS Geosciences Node](https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/polar/IMG/) |
+| NAIF SPICE kernels: `naif0012.tls`, `de421.bsp`, `pck00010.tpc`, `moon_pa_de421_1900-2050.bpc`, `moon_080317.tf` | `data/spice/` | [NAIF generic kernels](https://naif.jpl.nasa.gov/pub/naif/generic_kernels/) |
+
+Options: `--sites "Site20"` and `--files "surf slp"` limit the PGDA files, `--clones 1` adds a Monte-Carlo DEM clone,
+`--no-extras` skips the 120 m DEM and the SPICE kernels. Interrupted downloads resume when you run it again.
+Check the downloaded PGDA files with `python verify_data.py`.
 
 ## Format (same for every file)
 
