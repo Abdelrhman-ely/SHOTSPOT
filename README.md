@@ -1,54 +1,84 @@
-# SHOTSPOT MVP: miss-tolerant landing planner
+# SHOTSPOT
 
-Three PGDA 78 sites at the lunar south pole: **Site20 Leibnitz beta plateau, Site01 Connecting ridge,
-Site23 Malapert massif**, with site and date comparison.
+**A miss-tolerant landing-site planner for the lunar south pole.**
 
-```
-pipeline/  (Python, offline: layers 1-3)
-  terrain.py            LOLA DEMs + polar-stereographic math
-  horizon.py            terrain horizon per spot, 360 azimuths, out to 250 km (numba)
-  ephemeris.py          Sun/Earth az/el from NAIF SPICE (MOON_ME, DE421)
-  validate_horizons.py  checks our angles against NASA JPL Horizons
-  build_site.py         precomputes each site into web/data/<site>/ and writes web/data/sites.json
-web/data/  (precomputed site data read by the website)
-frontend/  (Angular website: layer 4, decision runs in the browser)
-tests/     synthetic-terrain tests for the horizon engine
-```
+SHOTSPOT compares candidate landing areas using terrain, Sun and Earth visibility, and landing-position uncertainty. The current demo includes three sites from NASA GSFC PGDA Product 78: Site01 Connecting Ridge, Site20 Leibnitz Beta Plateau, and Site23 Malapert Massif.
 
-## Run
+## Try the website
+
+The Angular website uses the precomputed files in `web/data/`; you do not need to download the large raw NASA datasets to run the demo.
 
 ```bash
-python3 -m venv .venv && .venv/bin/pip install numpy rasterio spiceypy scipy numba pytest requests pillow
-.venv/bin/python -m pytest -q tests                     # horizon engine tests
-cd pipeline && ../.venv/bin/python validate_horizons.py  # vs JPL Horizons (needs internet)
-../.venv/bin/python build_site.py && cd ..               # all sites, ~11 s each (or: build_site.py Site23)
+cd frontend
+npm install
+npm start
 ```
 
-Raw data (not in the repo, ~856 MB, all public NASA data): `bash download_data.sh --go` downloads the PGDA 78 layers,
-the 120 m LOLA GDR polar DEM and the 5 SPICE kernels into `data/`. See `DATA_LINKS.md`. Only needed to rerun the pipeline.
+Open <http://localhost:4200>. The site has **Home**, **Planner**, and **Sources & Limits** pages.
 
-## Frontend (Angular)
-
-`frontend/` is the website: Home, Planner (mission & sky, landing accuracy, compare on one page) and About. It reads the same
-precomputed data from `web/data/` (the Python pipeline output), so rebuild the data with `build_site.py` as before.
+To create a production build:
 
 ```bash
-cd frontend && npm install && npm start   # open http://localhost:4200
-npm run build                             # static build in frontend/dist/frontend/browser
+cd frontend
+npm run build
 ```
 
-The decision engine lives in `frontend/src/app/core/` (engine.ts, analysis.ts, draw.ts, store.ts).
+## How the project is organized
 
-## What is checked
+```text
+frontend/       Angular website and in-browser planning interface
+web/data/       Precomputed site data used by the website
+pipeline/       Python tools for terrain, horizons, ephemerides, and site generation
+tests/          Synthetic-terrain tests for the horizon calculations
+data/validation/ Saved Sun/Earth angle comparisons against NASA JPL Horizons
+docs/           Black-and-white research-paper style project document
+```
 
-- Sun and Earth angles vs JPL Horizons: max difference 0.0001 deg (20 times, target 0.01 deg).
-- Horizon engine: flat sphere and a 100 m wall at 4 km (1.366 deg with curvature).
-- 5 m tile vs 120 m polar DEM: mean height difference 1.9 m, so they can be stitched.
+The Python pipeline uses LOLA terrain data, NAIF SPICE kernels, and NASA JPL Horizons validation. Its main steps are:
 
-## Known limits and future work
+- `terrain.py` loads terrain and handles polar stereographic coordinates.
+- `horizon.py` computes terrain horizons around candidate landing spots.
+- `ephemeris.py` computes Sun and Earth positions using SPICE.
+- `validate_horizons.py` compares calculated Sun/Earth angles with JPL Horizons.
+- `build_site.py` generates the processed site files consumed by the website.
 
-- The demo aim point is our choice (plateau top). The IM-2 Athena spot is outside every PGDA 78 tile.
-- Visibility = body center above the horizon, 10-minute sampling. Not power, not link quality.
-- Drift = uniform circle (an input, not a prediction). 30 m spot grid over +-1.2 km.
-- Future work: explore computer-vision crater and surface-hazard mapping from high-resolution lunar imagery; it is not part of the current analysis.
-- Other future work: more PGDA 78 sites and documented comparison with NASA QuickMap / Moon Trek.
+## Rebuild the processed site data (optional)
+
+Only do this if you need to regenerate `web/data/`. The raw NASA source data is not stored in this repository; it is about 856 MB. `download_data.sh` lists estimated download sizes by default and downloads nothing unless you add `--go`.
+
+```bash
+# From the repository root: preview the download sizes (no files downloaded)
+bash download_data.sh
+
+# Download the source data required by the pipeline
+bash download_data.sh --go
+
+# Create a Python environment and install pipeline dependencies
+python3 -m venv .venv
+.venv/bin/pip install numpy rasterio spiceypy scipy numba requests pillow
+
+# Regenerate all three sites
+.venv/bin/python pipeline/build_site.py
+```
+
+See [DATA_LINKS.md](DATA_LINKS.md) for NASA source links, dataset details, and download options. To validate the downloaded PGDA GeoTIFFs, run:
+
+```bash
+.venv/bin/pip install numpy rasterio
+.venv/bin/python verify_data.py
+```
+
+`verify_data.py` is a data-quality helper: it reports raster dimensions, resolution, nodata range, and whether files for each site share a grid. It does not run the website or rebuild processed site data.
+
+## Validation and limitations
+
+- The saved ephemeris checks compare Sun and Earth angles against JPL Horizons; the documented maximum difference is 0.0001° across 20 samples.
+- The horizon tests cover a flat spherical surface and a synthetic 100 m wall at 4 km.
+- Visibility means the center of the Sun or Earth is above the modeled terrain horizon. It does not estimate power or communications link quality.
+- Landing drift is a user-provided circular uncertainty area, not a predicted landing distribution.
+- The demo aim points are selected by the team and are not official mission targets. Small hazards are not resolved by the current analysis.
+- Future work may explore computer-vision-based crater and surface-hazard mapping from high-resolution lunar imagery; that capability is not part of the current analysis.
+
+## License and data
+
+NASA datasets used by the project are publicly available from their respective sources. See [DATA_LINKS.md](DATA_LINKS.md) for attribution and source details. Add a project license here if the team has selected one.
