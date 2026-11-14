@@ -37,4 +37,5 @@ frontend/.vscode/
 SHARH_AR.md
 *.pdf
 !docs/SHOTSPOT_Lunar_South_Pole_Landing_Site_Planner_BW.pdf
+!output/pdf/SHOTSPOT_Team_Proposal_Research_Paper.pdf
 web/labeler/tiles/

@@ -23,6 +23,10 @@ cd frontend
 npm run build
 ```
 
+## Deploy to Vercel
+
+Keep the Vercel project **Root Directory** set to the repository root (`.`). The root `vercel.json` installs the Angular dependencies from `frontend/`, runs its production build, serves `frontend/dist/frontend/browser`, and routes application URLs such as `/planner` back to the Angular app.
+
 ## How the project is organized
 
 ```text
@@ -32,6 +36,7 @@ pipeline/       Python tools for terrain, horizons, ephemerides, and site genera
 tests/          Synthetic-terrain tests for the horizon calculations
 data/validation/ Saved Sun/Earth angle comparisons against NASA JPL Horizons
 docs/           Black-and-white research-paper style project document
+output/pdf/     NASA Space Apps Cairo 2026 team proposal
 ```
 
 The Python pipeline uses LOLA terrain data, NAIF SPICE kernels, and NASA JPL Horizons validation. Its main steps are:
