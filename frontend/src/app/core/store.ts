@@ -1,8 +1,8 @@
-// Shared session state (site, window, profile, drift, delay, aim) kept across every page.
+// Shared session state (site, window, profile, drift, aim) kept across every page.
 import { Injectable, computed, signal } from '@angular/core';
-import { CmpRow, arrivalShift, compare, windows } from './analysis';
+import { CmpRow, compare, windows } from './analysis';
 import {
-  Profile, SiteData, bestAim, dispersionCurve, flipPoint, idxTime, iso, latlonStr, loadAll, locate, margin, passFor,
+  Profile, SiteData, bestAim, dispersionCurve, flipPoint, idxTime, iso, latlonStr, loadAll, margin, passFor,
   reasonText, runs, spot, spotLatlon, statsFor, verdict, visSeries,
 } from './engine';
 
@@ -21,7 +21,6 @@ export class Store {
   readonly durDays = signal(10);
   readonly profile = signal<Profile>({ minSun: 40, minEarth: 50, maxSunGap: 72, maxEarthGap: 48, maxSlope: 8, conservative: false });
   readonly drift = signal(100);
-  readonly delayH = signal(0);
   readonly aims = signal<Record<string, number>>({});   // aim point per site (spot index)
   readonly selSpot = signal(-1);                         // -1 = follow the aim
   readonly cursor = signal(0);
@@ -46,8 +45,6 @@ export class Store {
   readonly aimVerdict = computed(() => verdict(this.site(), this.aim(), this.stats(), this.profile()));
   readonly sunWin = computed(() => windows(this.site(), this.vis().sun, this.win().s0));
   readonly earthWin = computed(() => windows(this.site(), this.vis().ear, this.win().s0));
-  readonly shift = computed(() => arrivalShift(this.site(), this.win().s0, this.win().n, this.aim(), this.drift(), this.profile(), this.delayH(), this.stats(), this.pass()));
-
   readonly siteCompare = computed(() => {
     const { s0, n } = this.win();
     const rows: CmpRow[] = this.sites().map((d) => {
@@ -66,12 +63,6 @@ export class Store {
         msg: v ? `Out of range: data covers ${iso(idxTime(d, 0)).slice(0, 10)} to ${iso(idxTime(d, d.M.ephem.n - n)).slice(0, 10)}` : 'Pick a date' };
     });
     return compare(rows, this.drift(), this.profile(), 'date');
-  });
-
-  readonly chip = computed(() => {
-    const d = this.site(); if (!d) return '';
-    const [lat, lon] = spotLatlon(d, this.aim());
-    return `${d.M.site.name} · aim ${latlonStr(lat, lon, 4)}`;
   });
 
   aimOf(d: SiteData) { return this.aims()[d.entry.id] ?? d.defaultAim; }
@@ -94,7 +85,6 @@ export class Store {
   resetAim() { const id = this.site().entry.id; this.aims.update((a) => { const b = { ...a }; delete b[id]; return b; }); this.selSpot.set(-1); this.save(); }
   setProfile(p: Partial<Profile>) { this.profile.update((x) => ({ ...x, ...p })); this.save(); }
   setDrift(v: number) { this.drift.set(v); this.save(); }
-  setDelay(v: number) { this.delayH.set(v); this.save(); }
   setStart(v: string) { this.startInput.set(v); this.applyWindow(); this.save(); }
   setDur(v: number) { this.durDays.set(v); this.applyWindow(); this.save(); }
   setCmpDate(i: number, v: string) { this.cmpDates.update((a) => a.map((x, j) => (j === i ? v : x))); this.save(); }
@@ -117,17 +107,6 @@ export class Store {
     return true;
   }
 
-  /** custom coordinates (story 2): only inside the precomputed area of a site */
-  goCoords(lat: number, lon: number): { ok: boolean; text: string } {
-    if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -360 || lon > 360)
-      return { ok: false, text: 'Enter a latitude between -90 and 90 and a longitude in degrees east.' };
-    const { hit, nearest } = locate(this.sites(), lat, lon);
-    if (!hit) return { ok: false, text: `Outside coverage: ${latlonStr(lat, lon)} is not inside any precomputed area (nearest: ${nearest!.d.entry.name}, ${(nearest!.dist / 1000).toFixed(1)} km from its aim point). No result is shown for this point.` };
-    if (hit.d.entry.id !== this.siteId()) this.selectSite(hit.d.entry.id);
-    this.setAim(hit.k);
-    return { ok: true, text: `Inside ${hit.d.entry.name} coverage. Using the nearest analysis spot (${hit.snap.toFixed(0)} m away) as your aim point.` };
-  }
-
   // ---------------- export (story 20)
   scenario() {
     const d = this.site(), a = this.aim(), v = this.aimVerdict(), st = this.stats(), stepMin = d.M.ephem.step_min, [lat, lon] = spotLatlon(d, a);
@@ -138,7 +117,7 @@ export class Store {
       tool: 'SHOTSPOT MVP', exported_utc: new Date().toISOString(),
       site: { id: d.entry.id, name: d.M.site.name, source: d.entry.source, aim_latlon_deg: [+lat.toFixed(5), +lon.toFixed(5)], aim_is_default: a === d.defaultAim },
       window: { landing_utc: idxTime(d, this.win().s0).toISOString(), duration_days: this.durDays(), sampling_min: stepMin, time_system: 'UTC' },
-      mission_profile: { ...this.profile() }, drift_radius_m: this.drift(), arrival_shift_h: this.delayH(),
+      mission_profile: { ...this.profile() }, drift_radius_m: this.drift(),
       results_at_aim: {
         verdict: v.pass ? 'PASS' : 'FAIL',
         conditions: v.reasons.map((r) => ({ condition: r.label, value: +r.value.toFixed(3), required: r.need, unit: r.unit, margin: +margin(r).toFixed(3), ok: r.ok, warning: !!r.warn })),
@@ -147,7 +126,7 @@ export class Store {
       },
       dispersion: { acceptable_at_aim_pct: Number.isFinite(b.nominal) ? +(100 * b.nominal).toFixed(1) : null, acceptable_at_best_aim_pct: +(100 * b.share).toFixed(1),
         best_aim_offset_m: bs ? [bs.x, bs.y] : null, decision_flip_m: f ? f.r : null },
-      explanations: { delayed_arrival: this.shift().msg, compare_sites: this.siteCompare().text, compare_dates: this.dateCompare().text },
+      explanations: { compare_sites: this.siteCompare().text, compare_dates: this.dateCompare().text },
       assumptions: d.M.assumptions, sources: d.M.sources, validation_vs_jpl_horizons: d.M.validation_vs_jpl_horizons,
       metadata: { terrain_res_m: d.M.hillshade.res, spot_spacing_m: d.M.spots.spacing_m, horizon: d.M.horizon, ephemeris: { source: d.M.ephem.source, start_utc: d.M.ephem.start_utc, step_min: stepMin } },
     };
@@ -163,7 +142,7 @@ export class Store {
   private save() {
     try {
       localStorage.setItem(LS_KEY, JSON.stringify({ siteId: this.siteId(), start: this.startInput(), dur: this.durDays(), profile: this.profile(),
-        drift: this.drift(), delay: this.delayH(), aims: this.aims(), simple: this.simple(), cmp: this.cmpDates() }));
+        drift: this.drift(), aims: this.aims(), simple: this.simple(), cmp: this.cmpDates() }));
     } catch { /* storage may be blocked */ }
   }
   private restore() {
@@ -174,7 +153,6 @@ export class Store {
       if (s.dur) this.durDays.set(+s.dur);
       if (s.profile) this.profile.set({ ...this.profile(), ...s.profile });
       if (Number.isFinite(s.drift)) this.drift.set(s.drift);
-      if (Number.isFinite(s.delay)) this.delayH.set(s.delay);
       if (s.aims) this.aims.set(s.aims);
       this.simple.set(!!s.simple);
       if (Array.isArray(s.cmp) && s.cmp.length === 3) this.cmpDates.set(s.cmp);

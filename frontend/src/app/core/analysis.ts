@@ -1,5 +1,4 @@
-// Higher-level analyses built on the engine: comparisons (stories 9, 10, 12),
-// delayed arrival (story 8) and visibility windows (story 4). All text is filled from engine numbers only.
+// Higher-level analyses built on the engine: comparisons and visibility windows.
 import {
   Profile, SiteData, Stats, Verdict, Vis, bestAim, diskOffsets, fmt, idxTime, iso, passFor, reasonText, runs,
   share, statsFor, verdict, visSeries,
@@ -52,29 +51,6 @@ export function compare(rows: CmpRow[], drift: number, p: Profile, noun: string)
   text += flip ? ` Decision flip: with drift of ${flip.r} m or more, ${flip.to.label} becomes better than ${flip.from.label}.`
     : valid.length > 1 && best ? ` The best ${noun} does not change between 25 m and 500 m of drift.` : '';
   return { rows, best, flip, text };
-}
-
-// ---------------------------------------------------------------- delayed arrival (story 8)
-export interface ShiftSide { t: Date; sun: number; earth: number; sunGap: number; earthGap: number; v: Verdict; share: number; }
-export interface ShiftResult { ok: boolean; msg: string; h: number; totMin: number; base?: ShiftSide; shifted?: ShiftSide; }
-
-export function arrivalShift(d: SiteData, s0: number, n: number, aim: number, drift: number, p: Profile, h: number, baseStats: Stats, basePass: Uint8Array): ShiftResult {
-  const totMin = n * d.M.ephem.step_min;
-  if (!h) return { ok: false, h, totMin, msg: 'Set an arrival-time shift (for example +48 h) to see how a launch delay changes feasibility at your aim point.' };
-  const s1 = s0 + Math.round((h * 60) / d.M.ephem.step_min);
-  if (s1 + n > d.M.ephem.n) return { ok: false, h, totMin, msg: `Out of range: a ${h} h shift ends after the precomputed data (${iso(idxTime(d, d.M.ephem.n - 1)).slice(0, 10)}). Pick an earlier landing time or a smaller shift.` };
-  const offs = diskOffsets(d, drift), stS = statsFor(d, s1, n), pgS = passFor(d, stS, p);
-  const pick = (t: Date, st: Stats, pg: Uint8Array): ShiftSide => ({ t, sun: st.sun[aim], earth: st.earth[aim], sunGap: st.sunGap[aim], earthGap: st.earthGap[aim], v: verdict(d, aim, st, p), share: share(d, aim, offs, pg) });
-  const B = pick(idxTime(d, s0), baseStats, basePass), S = pick(idxTime(d, s1), stS, pgS);
-  const sgn = (x: number, dd = 1) => `${x > 0 ? '+' : x < 0 ? '−' : '±'}${fmt(Math.abs(x), dd)}`;
-  let msg = `Arrival-time shift of +${h} h: sunlight at the aim point goes from ${fmt(B.sun)}% to ${fmt(S.sun)}% (${sgn(((S.sun - B.sun) / 100) * totMin, 0)} min), `
-    + `Earth visibility from ${fmt(B.earth)}% to ${fmt(S.earth)}% (${sgn(((S.earth - B.earth) / 100) * totMin, 0)} min), `
-    + `and the longest dark period from ${fmt(B.sunGap)} h to ${fmt(S.sunGap)} h. `;
-  if (B.v.pass && !S.v.pass) msg += `The aim point stops meeting the profile because ${S.v.reasons.filter((r) => !r.ok).map(reasonText).join('; ')}. `;
-  else if (!B.v.pass && S.v.pass) msg += 'With the delay, the aim point now meets every condition of the profile. ';
-  else msg += `The verdict at the aim point stays ${S.v.pass ? 'PASS' : 'FAIL'}. `;
-  if (Number.isFinite(B.share) && Number.isFinite(S.share)) msg += `Within ${drift} m of the aim, acceptable landing spots go from ${pct(B.share)} to ${pct(S.share)}.`;
-  return { ok: true, h, totMin, msg, base: B, shifted: S };
 }
 
 // ---------------------------------------------------------------- visibility windows (story 4)

@@ -1,15 +1,14 @@
-import { Component, ElementRef, NgZone, OnDestroy, OnInit, computed, inject } from '@angular/core';
+import { Component, ElementRef, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { Store } from '../../core/store';
 import { Reveal } from '../../shared/reveal/reveal';
 import { Starfield } from '../../shared/starfield/starfield';
-import { CountUp } from '../../shared/count-up/count-up';
 
 interface Dot { x: number; y: number; ok: boolean; delay: number; }
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, Starfield, Reveal, CountUp],
+  imports: [RouterLink, Starfield, Reveal],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })
@@ -19,25 +18,13 @@ export class Home implements OnInit, OnDestroy {
   private readonly zone = inject(NgZone);
   private readonly host = inject(ElementRef<HTMLElement>);
   protected readonly reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  protected readonly titleWords = ['Land', 'where', 'the'];
-
-  protected readonly facts = computed(() => {
-    if (!this.s.ready()) return null;
-    const d = this.s.sites()[0], v = d.M.validation_vs_jpl_horizons ?? {};
-    const maxDiff = Math.max(0, ...Object.values<any>(v).map((x) => Math.max(x.max_abs_daz_deg, x.max_abs_del_deg)));
-    return [
-      { value: String(this.s.sites().length), label: 'south pole sites from NASA PGDA 78' },
-      { value: (d.M.ephem.n as number).toLocaleString('en-US'), label: `Sun & Earth positions per site, every ${d.M.ephem.step_min} min` },
-      { value: `${d.M.horizon.max_distance_km} km`, label: 'of terrain scanned for every horizon' },
-      { value: maxDiff < 1e-4 ? '< 0.0001°' : `${maxDiff.toFixed(4)}°`, label: 'max angle difference vs NASA JPL Horizons' },
-    ];
-  });
+  protected readonly titleWords = ['Your', 'lander', 'will', 'miss.'];
 
   protected readonly steps = [
-    { n: '01', title: 'Choose a site', text: 'Pick a curated south pole site on the map, or enter your own coordinates inside the covered area.', frag: 'sites' },
-    { n: '02', title: 'Set the mission window', text: 'Landing time in UTC and a duration. Watch the Sun and Earth move above the real terrain horizon.', frag: 'mission' },
-    { n: '03', title: 'Plan for the miss', text: 'Enter how far the lander may drift. See how many likely landing spots still work, and where to aim.', frag: 'landing' },
-    { n: '04', title: 'Compare and decide', text: 'Put sites or dates side by side, find the decision flip point and export the result.', frag: 'compare' },
+    { n: '01', title: 'Choose a site', text: 'Select a south pole site in the planner controls.', frag: 'mission' },
+    { n: '02', title: 'Set the mission window', text: 'Pick a date and watch the Sun and Earth over the real horizon.', frag: 'mission' },
+    { n: '03', title: 'Plan for the miss', text: 'Set the drift. See how many spots still work, and where to aim.', frag: 'landing' },
+    { n: '04', title: 'Compare and decide', text: 'Sites or dates side by side. Export the result.', frag: 'compare' },
   ];
 
   /** illustrative landing scatter for the problem section (not engine output; labeled as such) */

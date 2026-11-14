@@ -1,6 +1,6 @@
 // Canvas renderers, ported from web/app.js. Pure drawing: every number comes from the engine.
 import { CmpRow } from './analysis';
-import { CurvePt, R_MOON, SiteData, Vis, WEAK_GAP_M, eph, hzAt, spot } from './engine';
+import { CurvePt, SiteData, Vis, WEAK_GAP_M, eph, hzAt, spot } from './engine';
 
 const C = { sun: '#ffc94a', earth: '#5aa9ff', pass: '#2fd0a0', grid: '#1a2436', muted: '#8b98b0', text: '#e6ebf5', weak: '#c9a7ff', sel: '#ffc94a' };
 
@@ -103,38 +103,4 @@ export function drawCmpTimeline(cv: HTMLCanvasElement, rows: CmpRow[], best: Cmp
   g.fillStyle = C.muted; const days = ((n - 1) * stepMs) / 864e5;
   for (let dd = 0; dd <= days; dd += Math.max(1, Math.round(days / 10))) { const x = X((dd * 864e5) / stepMs); g.fillText(`day ${dd}`, Math.min(x - 14, W - 44), H - 6); }
   g.fillText('yellow = Sun visible, blue = Earth visible, at each aim point · UTC', L, H - 20);
-}
-
-/** south pole overview with the sites; returns screen positions for click picking */
-export function drawSiteMap(cv: HTMLCanvasElement, sites: SiteData[], curId: string) {
-  const g = cv.getContext('2d')!, W = cv.width, H = cv.height;
-  const pts = sites.map((d) => ({ d, xy: d.M.site.aim_xy as [number, number] }));
-  const xs = [0, ...pts.map((p) => p.xy[0])], ys = [0, ...pts.map((p) => p.xy[1])];
-  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
-  const pad = 0.28 * Math.max(maxX - minX, maxY - minY, 1), sc = Math.min(W / (maxX - minX + 2 * pad), H / (maxY - minY + 2 * pad));
-  const cx = W / 2 - ((minX + maxX) / 2) * sc, cy = H / 2 + ((minY + maxY) / 2) * sc;
-  g.clearRect(0, 0, W, H); g.fillStyle = '#050810'; g.fillRect(0, 0, W, H);
-  g.font = '16px system-ui'; g.lineWidth = 1;
-  for (const lat of [-89, -88, -87, -86, -85, -84]) {
-    const rho = 2 * R_MOON * Math.tan(Math.PI / 4 + (lat * Math.PI) / 360);
-    g.strokeStyle = '#1e2a3d'; g.beginPath(); g.arc(cx, cy, rho * sc, 0, 2 * Math.PI); g.stroke();
-    g.fillStyle = '#6b7d96'; g.fillText(`${-lat}°S`, cx + 4, cy - rho * sc - 4);
-  }
-  g.strokeStyle = '#6b7d96'; g.beginPath(); g.moveTo(cx - 8, cy); g.lineTo(cx + 8, cy); g.moveTo(cx, cy - 8); g.lineTo(cx, cy + 8); g.stroke();
-  g.fillStyle = '#9babc2'; g.fillText('pole', cx + 10, cy + 18);
-  const placed: { x: number; y: number; w: number }[] = [];
-  const out = pts.map((p) => {
-    const x = cx + p.xy[0] * sc, y = cy - p.xy[1] * sc, cur = p.d.entry.id === curId;
-    g.beginPath(); g.arc(x, y, cur ? 9 : 7, 0, 2 * Math.PI); g.fillStyle = cur ? '#58b4f7' : '#9babc2'; g.fill();
-    if (cur) { g.strokeStyle = '#fff'; g.lineWidth = 2; g.stroke(); g.lineWidth = 1; }
-    g.fillStyle = cur ? '#e8edf5' : '#9babc2'; g.font = `${cur ? '600 ' : ''}20px system-ui`;
-    const name = p.d.entry.name, tw = g.measureText(name).width, lx = Math.min(Math.max(x - tw / 2, 4), W - tw - 4);
-    const hits = (ty: number) => placed.some((b) => lx < b.x + b.w && lx + tw > b.x && ty - 18 < b.y && ty > b.y - 18);
-    let ty = y - 16;
-    for (const c of [y - 16, y + 32, y - 40, y + 56]) if (c > 18 && c < H - 4 && !hits(c)) { ty = c; break; }
-    placed.push({ x: lx, y: ty, w: tw }); g.fillText(name, lx, ty);
-    return { id: p.d.entry.id, x, y };
-  });
-  g.font = '14px system-ui'; g.fillStyle = '#6b7d96'; g.fillText('↑ 0°E', 8, 20);
-  return out;
 }

@@ -36,4 +36,5 @@ Thumbs.db
 frontend/.vscode/
 SHARH_AR.md
 *.pdf
+!docs/SHOTSPOT_Lunar_South_Pole_Landing_Site_Planner_BW.pdf
 web/labeler/tiles/

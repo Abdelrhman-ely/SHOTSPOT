@@ -11,7 +11,7 @@
         </div>
       </label>
       <p class="site-desc">{{ s.site().entry.description }}</p>
-      <p class="caption">Source: {{ s.site().entry.source }}. Aim point chosen by us (highest gently sloped spot), not an official target.</p>
+      <p class="caption">Aim point is a prototype choice, not an official mission target.</p>
     </section>
 
     <section class="ctrl-section">
@@ -55,16 +55,5 @@
       </div>
     </section>
 
-    <section class="ctrl-section">
-      <h2 class="ctrl-title"><span class="ctrl-step">4</span> Delayed arrival</h2>
-      <label class="field">
-        <span class="field-label">Arrival-time shift <output class="field-value">{{ s.delayH() }}</output> h</span>
-        <input type="range" min="0" max="168" step="6" class="range" [value]="s.delayH()" (change)="s.setDelay(num($event))">
-      </label>
-      <div class="presets">
-        @for (v of [0, 24, 48, 96]; track v) { <button class="btn btn--preset" (click)="s.setDelay(v)">{{ v ? '+' + v + ' h' : 'none' }}</button> }
-      </div>
-      <p class="caption">Same site, aim point and duration; only the landing time moves later.</p>
-    </section>
   </div>
 </aside>

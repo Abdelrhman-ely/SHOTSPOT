@@ -174,28 +174,10 @@ export function nextChange(d: SiteData, k: number, which: 'sun' | 'earth', vs: V
 }
 
 // ---------------------------------------------------------------- coordinates
-export function latlonToXY(lat: number, lon: number): [number, number] {
-  const la = (lat * Math.PI) / 180, lo = (lon * Math.PI) / 180, rho = 2 * R_MOON * Math.tan(Math.PI / 4 + la / 2);
-  return [rho * Math.sin(lo), rho * Math.cos(lo)];
-}
 export function xyToLatlon(x: number, y: number): [number, number] {
   const rho = Math.hypot(x, y);
   return [((2 * Math.atan(rho / (2 * R_MOON)) - Math.PI / 2) * 180) / Math.PI, (Math.atan2(x, y) * 180) / Math.PI];
 }
 export function spotLatlon(d: SiteData, k: number): [number, number] {
   const s = spot(d, k), [ax, ay] = d.M.site.aim_xy; return xyToLatlon(ax + s.x, ay + s.y);
-}
-/** find which site's precomputed area contains a point, and the nearest analysis spot */
-export function locate(sites: SiteData[], lat: number, lon: number) {
-  const [x, y] = latlonToXY(lat, lon);
-  let nearest: { d: SiteData; dist: number } | null = null;
-  for (const d of sites) {
-    const [ax, ay] = d.M.site.aim_xy, h = d.M.spots.half_m, sp = d.M.spots.spacing_m, dx = x - ax, dy = y - ay, dist = Math.hypot(dx, dy);
-    if (!nearest || dist < nearest.dist) nearest = { d, dist };
-    if (Math.abs(dx) <= h && Math.abs(dy) <= h) {
-      const c = Math.round((dx + h) / sp), r = Math.round((h - dy) / sp);
-      return { hit: { d, k: r * d.COLS + c, snap: Math.hypot(dx - (-h + c * sp), dy - (h - r * sp)) }, nearest };
-    }
-  }
-  return { hit: null, nearest };
 }

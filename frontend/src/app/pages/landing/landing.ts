@@ -1,8 +1,7 @@
 import { Component, ElementRef, computed, effect, inject, viewChild } from '@angular/core';
 import { Store } from '../../core/store';
 import { drawCurve, drawMap, mapPick } from '../../core/draw';
-import { fmt, iso, spot } from '../../core/engine';
-import { pct } from '../../core/analysis';
+import { fmt, spot } from '../../core/engine';
 import { goSection } from '../../core/nav';
 
 @Component({
@@ -11,7 +10,7 @@ import { goSection } from '../../core/nav';
 })
 export class Landing {
   protected readonly s = inject(Store);
-  protected readonly fmt = fmt; protected readonly iso = iso; protected readonly pct = pct;
+  protected readonly fmt = fmt;
   private readonly map = viewChild.required<ElementRef<HTMLCanvasElement>>('map');
   private readonly curve = viewChild.required<ElementRef<HTMLCanvasElement>>('curve');
 
@@ -44,5 +43,4 @@ export class Landing {
   pick(e: MouseEvent) { const k = mapPick(this.map().nativeElement, this.s.site(), e); if (k >= 0) this.s.selSpot.set(k); }
   useBest() { const b = this.s.best(); if (b.share > 0) this.s.setAim(b.k); }
   aimHere() { this.s.setAim(this.s.spotK()); }
-  sgn(x: number, d = 1) { return `${x > 0 ? '+' : x < 0 ? '−' : '±'}${fmt(Math.abs(x), d)}`; }
 }

@@ -7,44 +7,33 @@ import { Store } from '../../core/store';
   imports: [RouterLink],
   template: `
   <div class="page page--narrow">
-    <h1 class="page-title">Assumptions & limits</h1>
-    <p class="page-lead">What SHOTSPOT computes, where the data comes from, how it was checked, and what it does not claim.</p>
+    <h1 class="page-title">Sources & limits</h1>
+    <p class="page-lead">How SHOTSPOT supports landing site decisions, and where its results have limits.</p>
     @if (!s.ready()) {
       @if (s.error(); as err) { <div class="card load-error" role="alert"><h2 class="card-title" style="color: var(--c-fail)">Failed to load site data</h2><p class="explain">{{ err }}</p></div> }
       @if (!s.error()) { <div class="loading" role="status"><div class="spinner" aria-hidden="true"></div><p>Loading…</p></div> }
     } @else {
       @let M = s.site().M;
-      <div class="card"><h2 class="card-title">Assumptions</h2>
-        <ul class="list">@for (a of M.assumptions; track a) { <li>{{ a }}</li> }
-          <li><b>Prototype data:</b> the demo aim points are our choice, and custom coordinates only work inside the precomputed ±1.2 km area of each site.</li></ul></div>
-      <div class="card card--gap"><h2 class="card-title">What the tool does not claim</h2>
-        <ul class="list"><li>Power generated (only solar visibility).</li><li>Link quality (only geometric Earth visibility).</li>
-          <li>Hazards smaller than the grid (~10 m rocks and craters).</li><li>A predicted landing error (drift is your input).</li></ul></div>
-      <div class="card card--gap"><h2 class="card-title">Data sources & resolution</h2>
-        <ul class="list">@for (a of M.sources; track a) { <li>{{ a }}</li> }
-          <li>Resolution: terrain {{ M.hillshade.res }} m/px near field, 120 m/px far field out to {{ M.horizon.max_distance_km }} km; landing spots every {{ M.spots.spacing_m }} m; Sun/Earth every {{ M.ephem.step_min }} min (UTC).</li></ul></div>
-      <div class="card card--gap"><h2 class="card-title">Validation <small>· {{ s.site().entry.name }}</small></h2>
-        <ul class="list">
-          @for (b of bodies(); track b.name) { <li>{{ b.name }}: {{ b.n }} sample times vs NASA JPL Horizons, max |Δaz| {{ b.daz }}°, max |Δel| {{ b.del }}°</li> }
-          <li>Horizon engine: unit tests on synthetic terrain (flat sphere, 100 m wall at 4 km).</li>
-          <li><b>Pending:</b> comparison of at least 2 site-date cases with NASA Quickmap / Moon Trek is not documented yet.</li>
+      <div class="card"><h2 class="card-title">How to read the results</h2>
+        <ul class="list"><li>Sunlight means the Sun’s center clears the terrain horizon; it does not estimate power.</li>
+          <li>Earth visibility means geometric line of sight; it does not estimate radio link quality.</li>
+          <li>Drift is a user-set landing area around the aim point, not a landing-error prediction.</li>
+          <li>The terrain layer does not detect hazards; objects smaller than about 10 m may not appear. Demo aim points are prototype choices, not official mission targets.</li>
         </ul></div>
-      <div class="card card--gap"><h2 class="card-title">Glossary</h2>
-        <dl class="gloss">
-          <dt>Horizon</dt><dd>The skyline made by the surrounding terrain, as seen from a spot.</dd>
-          <dt>Elevation</dt><dd>Angle above flat ground, in degrees. Negative means below it.</dd>
-          <dt>Azimuth</dt><dd>Compass direction: 0° north, 90° east.</dd>
-          <dt>Drift radius</dt><dd>How far from the aim point the lander may touch down.</dd>
-          <dt>Decision flip point</dt><dd>The drift at which the best choice (aim, site or date) changes.</dd>
-          <dt>Weakly constrained terrain</dt><dd>No real laser measurement within 20 m; heights are interpolated.</dd>
-        </dl></div>
+      <div class="card card--gap"><h2 class="card-title">Data & validation</h2>
+        <ul class="list">@for (a of M.sources; track a) { <li>{{ a }}</li> }
+          <li>Terrain: {{ M.hillshade.res }} m/pixel near field and 120 m/pixel far field; landing samples every {{ M.spots.spacing_m }} m. Sun and Earth positions are sampled every {{ M.ephem.step_min }} minutes (UTC).</li>
+          @for (b of bodies(); track b.name) { <li>{{ b.name }} checked against NASA JPL Horizons ({{ b.n }} sample times): max azimuth difference {{ b.daz }}°, elevation difference {{ b.del }}°.</li> }
+          <li>Horizon calculations are checked on synthetic terrain cases.</li>
+        </ul></div>
+      <div class="card card--gap"><h2 class="card-title">Future work</h2>
+        <p class="explain">We plan to explore computer vision for crater and surface-hazard mapping from high-resolution lunar imagery. This capability is not part of the current analysis.</p>
+      </div>
       <p class="step-nav"><a class="btn btn--primary" routerLink="/planner">Start planning →</a></p>
     }
   </div>`,
   styles: [`.list { padding-inline-start: 1.2em; display: grid; gap: var(--sp-2); color: var(--c-text-2); margin-block-start: var(--sp-3); }
-    .gloss { display: grid; grid-template-columns: max-content 1fr; gap: var(--sp-2) var(--sp-4); margin-block-start: var(--sp-3); }
-    .gloss dt { font-weight: 600; } .gloss dd { margin: 0; color: var(--c-text-2); }
-    @media (max-width: 600px) { .gloss { grid-template-columns: 1fr; } .gloss dd { margin-block-end: var(--sp-2); } }`],
+    `],
 })
 export class About {
   protected readonly s = inject(Store);

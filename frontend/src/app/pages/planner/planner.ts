@@ -3,15 +3,14 @@ import { ActivatedRoute } from '@angular/router';
 import { Store } from '../../core/store';
 import { goSection } from '../../core/nav';
 import { Controls } from '../../shared/controls/controls';
-import { Sites } from '../sites/sites';
 import { Mission } from '../mission/mission';
 import { Landing } from '../landing/landing';
 import { Compare } from '../compare/compare';
 
-/** The whole technical tool on one page: controls on the left, four sections on the right. */
+/** The whole technical tool on one page: controls on the left, three analysis sections on the right. */
 @Component({
   selector: 'app-planner',
-  imports: [Controls, Sites, Mission, Landing, Compare],
+  imports: [Controls, Mission, Landing, Compare],
   template: `
 @if (s.error(); as err) {
     <div class="card load-error" role="alert"><h2 class="card-title" style="color: var(--c-fail)">Failed to load site data</h2>
@@ -28,7 +27,6 @@ import { Compare } from '../compare/compare';
               <b>{{ i + 1 }}</b>{{ t.label }}</button>
           }
         </nav>
-        <section id="sites" class="sec"><app-sites /></section>
         <section id="mission" class="sec"><app-mission /></section>
         <section id="landing" class="sec"><app-landing /></section>
         <section id="compare" class="sec"><app-compare /></section>
@@ -41,10 +39,10 @@ export class Planner implements AfterViewInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly host = inject(ElementRef<HTMLElement>);
   protected readonly tabs = [
-    { id: 'sites', label: 'Site' }, { id: 'mission', label: 'Mission & sky' },
-    { id: 'landing', label: 'Landing accuracy' }, { id: 'compare', label: 'Compare' },
+    { id: 'mission', label: 'Mission & sky' }, { id: 'landing', label: 'Landing accuracy' },
+    { id: 'compare', label: 'Compare' },
   ];
-  protected readonly active = signal('sites');
+  protected readonly active = signal('mission');
   private io?: IntersectionObserver;
   private viewReady = signal(false);
 
